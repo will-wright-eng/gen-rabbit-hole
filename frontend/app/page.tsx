@@ -1,24 +1,49 @@
 'use client';
 
 import dynamic from 'next/dynamic';
+import { ReactFlowProvider } from '@xyflow/react';
 
 //Dynamically import the MindMap component to avoid SSR issues with React Flow
-// const MindMap = dynamic(() => import('./MindMap'), {
 // import { MindMap } from '@/components/mindmap/MindMap';
+// const MindMap = dynamic(() => import('./MindMap'), {
 const MindMap = dynamic(() => import('@/components/mindmap/MindMap'), {
   ssr: false,
 });
 
-export default function MindMapPage() {
+export default function Home() {
   return (
     <main className="container mx-auto py-8">
       <h1 className="text-3xl font-bold mb-8">Mind Map Flow</h1>
       <div className="h-[800px] w-full border rounded-lg overflow-hidden">
-        <MindMap />
+        <ReactFlowProvider>
+          <MindMap />
+        </ReactFlowProvider>
       </div>
     </main>
   );
 }
+
+// 'use client';
+
+// import dynamic from 'next/dynamic';
+
+// //Dynamically import the MindMap component to avoid SSR issues with React Flow
+// // const MindMap = dynamic(() => import('./MindMap'), {
+// // import { MindMap } from '@/components/mindmap/MindMap';
+// const MindMap = dynamic(() => import('@/components/mindmap/MindMap'), {
+//   ssr: false,
+// });
+
+// export default function MindMapPage() {
+//   return (
+//     <main className="container mx-auto py-8">
+//       <h1 className="text-3xl font-bold mb-8">Mind Map Flow</h1>
+//       <div className="h-[800px] w-full border rounded-lg overflow-hidden">
+//         <MindMap />
+//       </div>
+//     </main>
+//   );
+// }
 
 
 
