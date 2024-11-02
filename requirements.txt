@@ -1,0 +1,8 @@
+fastapi
+uvicorn
+pydantic
+litellm
+wandb
+python-dotenv
+
+
