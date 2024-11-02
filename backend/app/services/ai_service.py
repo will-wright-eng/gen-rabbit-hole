@@ -21,7 +21,7 @@ class AIService:
         wandb.init(
             project="learning-roadmap-ai",
             api_key="d59a2a34b7d82a5bed0a75eea3b43bf89af9b6bc",
-            config={"model": "gemini/gemini-1.5-pro", "environment": os.getenv("ENVIRONMENT", "development")},
+            config={"model": "gemini/gemini-1.5-pro", "environment": os.g1etenv("ENVIRONMENT", "development")},
         )
 
     async def _generate_completion(self, messages: list[dict[str, str]]) -> str:
