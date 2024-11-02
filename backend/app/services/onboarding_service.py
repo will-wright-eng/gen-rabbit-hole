@@ -4,48 +4,60 @@ from app.schemas.onboarding import OnboardingState, Question
 
 
 class OnboardingService:
-    def __init__(self) -> None:
-        # This would eventually load from a database or files
-        self.question_banks = self._load_question_banks()
-
-    def _load_question_banks(self) -> dict:
-        # Example hardcoded questions for demonstration
-        return {
-            "python": {
-                "job": [
-                    Question(
-                        id="python_role",
-                        question="What type of Python role interests you?",
-                        type="select",
-                        options=[
-                            {"value": "backend", "label": "Backend Developer"},
-                            {"value": "data", "label": "Data Analyst"},
-                            {"value": "ml", "label": "Machine Learning Engineer"},
-                        ],
-                        info="Different Python roles require different skill sets",
-                    ),
+    async def get_initial_questions(self, topic: str, goal: str) -> list[Question]:
+        """Generate dynamic questions based on the topic and goal."""
+        # This would typically call the AI service to generate relevant questions
+        # For now, returning a sample question
+        return [
+            Question(
+                id="experience_level",
+                question=f"What's your current experience level with {topic}?",
+                type="select",
+                options=[
+                    {"value": "beginner", "label": "Beginner"},
+                    {"value": "intermediate", "label": "Intermediate"},
+                    {"value": "advanced", "label": "Advanced"},
                 ],
-            },
-        }
+                can_skip=True,
+            ),
+        ]
 
-    def get_initial_questions(self, topic: str, goal: str) -> list[Question]:
-        """Get the first set of questions based on topic and goal."""
-        if topic.lower() not in self.question_banks:
-            msg = f"No question bank found for topic: {topic}"
-            raise ValueError(msg)
+    async def get_next_questions(self, state: OnboardingState) -> list[Question]:
+        """Generate next questions based on previous answers."""
+        # This would analyze previous answers and generate relevant follow-up questions
+        # For demonstration, returning a contextual question
+        if not state.answers:
+            return []
 
-        return self.question_banks[topic.lower()].get(goal.lower(), [])
+        last_answer = state.answers[-1]
+        if last_answer.skipped:
+            # If user skipped, generate alternative question path
+            return []
 
-    def get_next_questions(self, state: OnboardingState) -> list[Question]:
-        """Get next questions based on previous answers."""
-        # This will be implemented based on logic we define
+        # Example of dynamic question generation based on previous answer
+        if last_answer.question_id == "experience_level" and last_answer.answer == "beginner":
+            return [
+                Question(
+                    id="learning_style",
+                    question="How do you prefer to learn?",
+                    type="select",
+                    options=[
+                        {"value": "visual", "label": "Visual learning"},
+                        {"value": "practical", "label": "Hands-on projects"},
+                        {"value": "theoretical", "label": "Theoretical concepts first"},
+                    ],
+                    can_skip=True,
+                ),
+            ]
+
         return []
 
-    def generate_roadmap(self, state: OnboardingState) -> dict[str, Any]:
+    async def generate_roadmap(self, state: OnboardingState) -> dict[str, Any]:
         """Generate final roadmap based on all answers."""
-        # This will be implemented with AI service integration
         return {
             "topic": state.learning_topic,
             "goal": state.end_goal,
-            "steps": ["Step 1", "Step 2", "Step 3"],  # Placeholder
+            "answers": [answer.dict() for answer in state.answers],
+            # This would be expanded with AI-generated roadmap
+            "steps": [],
         }
