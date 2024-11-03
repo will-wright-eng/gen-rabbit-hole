@@ -8,11 +8,16 @@ class InitialResponse(BaseModel):
     end_goal: str = Field(..., description="What is your end goal?")
 
 
+class QuestionOption(BaseModel):
+    value: str
+    label: str
+
+
 class Question(BaseModel):
     id: str
     question: str
     type: str  # "text", "select", "multiselect"
-    options: list[dict[str, str]] | None = None
+    options: list[QuestionOption] | None = None
     info: str | None = None
     can_skip: bool = True
 

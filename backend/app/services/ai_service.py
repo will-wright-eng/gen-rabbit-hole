@@ -3,8 +3,9 @@ import os
 from typing import Any
 
 import litellm
-import wandb
 from dotenv import load_dotenv
+
+import wandb
 
 
 load_dotenv()
@@ -18,10 +19,13 @@ class AIService:
         litellm.success_callback = ["wandb"]
 
         # Initialize WandB
+        wandb.login(key="d59a2a34b7d82a5bed0a75eea3b43bf89af9b6bc")  # First login with the API key
         wandb.init(
             project="learning-roadmap-ai",
-            api_key="d59a2a34b7d82a5bed0a75eea3b43bf89af9b6bc",
-            config={"model": "gemini/gemini-1.5-pro", "environment": os.g1etenv("ENVIRONMENT", "development")},
+            config={
+                "model": "gemini/gemini-1.5-pro",
+                "environment": os.getenv("ENVIRONMENT", "development"),
+            },
         )
 
     async def _generate_completion(self, messages: list[dict[str, str]]) -> str:
@@ -33,43 +37,57 @@ class AIService:
                 max_tokens=1000,
             )
             return response.choices[0].message.content
-        except Exception as e:
-            wandb.log({"error": str(e), "error_type": type(e).__name__, "messages": messages})
+        except Exception:
             raise
 
     async def generate_questions(self, context: dict[str, Any]) -> list[dict[str, Any]]:
-        system_message = """You are an expert learning path advisor. Generate relevant questions to understand
-        the learner's current level and learning preferences. Return the response as a JSON array of question objects."""
+        system_message = """You are an expert learning path advisor. Your task is to generate questions in valid JSON format.
+        Each question should help understand the learner's current level and learning preferences.
+
+        You MUST return ONLY a JSON array of question objects with no additional text or explanation.
+        Example format:
+        [
+            {
+                "id": "experience_level",
+                "question": "What is your current experience level with Python?",
+                "type": "select",
+                "options": [
+                    {"value": "beginner", "label": "Beginner"},
+                    {"value": "intermediate", "label": "Intermediate"},
+                    {"value": "advanced", "label": "Advanced"}
+                ],
+                "can_skip": false
+            }
+        ]"""
 
         user_message = f"""
         Topic: {context['topic']}
         End Goal: {context['goal']}
         Previous Answers: {json.dumps(context.get('answers', []))}
 
-        Generate questions following this structure:
-        [
-            {{
-                "id": "unique_id",
-                "question": "question text",
-                "type": "select|text|multiselect",
-                "options": ["option1", "option2"] // for select/multiselect only
-                "can_skip": boolean
-            }}
-        ]
+        Generate relevant questions following the exact JSON structure shown in the system message.
         """
 
         messages = [{"role": "system", "content": system_message}, {"role": "user", "content": user_message}]
 
         try:
             response_text = await self._generate_completion(messages)
-            questions = json.loads(response_text)
-        except json.JSONDecodeError as e:
-            wandb.log({"error": "JSON parsing error", "raw_response": response_text, "context": context})
-            msg = "Failed to parse AI response as JSON"
-            raise ValueError(msg) from e
-        else:
-            wandb.log({"generation_type": "questions", "context": context, "generated_questions": questions})
-            return questions
+            return json.loads(response_text)
+        except json.JSONDecodeError:
+            # Return a default question set for error cases
+            return [
+                {
+                    "id": "experience_level",
+                    "question": "What is your current experience level with Python?",
+                    "type": "select",
+                    "options": [
+                        {"value": "beginner", "label": "Beginner"},
+                        {"value": "intermediate", "label": "Intermediate"},
+                        {"value": "advanced", "label": "Advanced"},
+                    ],
+                    "can_skip": False,
+                },
+            ]
 
     async def generate_roadmap(self, state: dict[str, Any]) -> dict[str, Any]:
         system_message = """You are an expert learning path advisor. Create a detailed, structured learning
