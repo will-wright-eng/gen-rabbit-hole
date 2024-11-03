@@ -1,13 +1,16 @@
 import { useApi } from '@/hooks/useApi';
 import { MOCK_ONBOARDING_DATA } from '@/lib/mock-data/onboarding';
+import { useFlow } from '../../flow/hooks/useFlow';
 
 export function useOnboarding() {
+  const { saveFlowData } = useFlow();
+
   const {
     data: preferences,
     error,
     isLoading,
     execute: savePreferences
-  } = useApi('/api/onboarding', { 
+  } = useApi('/api/onboarding/generate-roadmap', {
     method: 'POST',
     fallbackData: MOCK_ONBOARDING_DATA.defaultAnswers
   });
@@ -15,7 +18,13 @@ export function useOnboarding() {
   const submitOnboarding = async (answers) => {
     try {
       const response = await savePreferences(answers);
-      localStorage.setItem('userPreferences', JSON.stringify(response));
+      localStorage.setItem('userPreferences', JSON.stringify(answers));
+
+      if (response.content) {
+        console.log('Saving flow data:', response.content);
+        await saveFlowData(response.content);
+      }
+
       return response;
     } catch (error) {
       console.error('Failed to save onboarding preferences:', error);

@@ -60,21 +60,12 @@ export function useFlow() {
   } = useApi('/api/flow/generate', {
     method: 'POST',
     fallbackData: {
-      nodes: [
-        {
-          id: `generated-${Date.now()}`,
-          position: { x: 200, y: 0 },
-          data: {
-            label: 'Generated Node',
-            description: 'AI-generated node',
-            metadata: {
-              createdAt: new Date().toISOString(),
-              category: 'generated'
-            }
-          },
-          type: 'default'
+      nodes: NodeGenerator.generateNodes({
+        id: 'fallback-source',
+        data: {
+          label: 'Fallback Source'
         }
-      ]
+      }, 1)
     }
   });
 

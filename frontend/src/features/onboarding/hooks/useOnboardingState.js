@@ -6,6 +6,7 @@ export const useOnboardingState = ({ onComplete }) => {
   const [currentStep, setCurrentStep] = useState(0);
   const [answers, setAnswers] = useState({});
   const [currentAnswer, setCurrentAnswer] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const progress = ((currentStep + 1) / questions.length) * 100;
   const currentQuestion = questions[currentStep];
@@ -22,10 +23,13 @@ export const useOnboardingState = ({ onComplete }) => {
 
     if (isLastStep) {
       try {
+        setIsSubmitting(true);
         const result = await submitOnboarding(updatedAnswers);
         onComplete(result);
       } catch (error) {
         console.error('Onboarding failed:', error);
+      } finally {
+        setIsSubmitting(false);
       }
     } else {
       setAnswers(updatedAnswers);
@@ -48,5 +52,6 @@ export const useOnboardingState = ({ onComplete }) => {
     isLastStep,
     handleNext,
     handleBack,
+    isSubmitting,
   };
 };

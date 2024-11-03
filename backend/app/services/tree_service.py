@@ -4,7 +4,7 @@ from typing import Any
 
 
 class TreeService:
-    def __init__(self, ai_service: "AIService") -> None:
+    def __init__(self, ai_service: str = "AIService") -> None:
         self.ai = ai_service
         self._trees: dict[str, dict[str, Any]] = {}
         self._expanding_nodes = set()

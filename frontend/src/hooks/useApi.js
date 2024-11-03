@@ -8,6 +8,9 @@ export function useApi(endpoint, options = {}) {
 
   const execute = useCallback(async (body = null, customOptions = {}) => {
     try {
+      if (body) {
+        console.log('body', body);
+      }
       setIsLoading(true);
       setError(null);
       const method = customOptions.method || options.method || 'GET';

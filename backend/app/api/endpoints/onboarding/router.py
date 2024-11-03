@@ -1,7 +1,6 @@
-# app/api/endpoints/onboarding/router.py
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
-
+from typing import Optional
 from app.services.ai_service import AIService
 
 
@@ -10,8 +9,12 @@ ai_service = AIService()
 
 
 class OnboardingRequest(BaseModel):
+    name: str
     learning_topic: str
-    end_goal: str
+    end_goal: Optional[str] = "Open ended"
+    q1: str
+    q2: str
+    q3: str
 
 
 class Answer(BaseModel):
@@ -76,6 +79,9 @@ async def generate_roadmap(request: OnboardingRequest) -> dict:
             [
                 f"Learning Topic: {request.learning_topic}",
                 f"End Goal: {request.end_goal}",
+                f"Experience Level: {request.q1}",
+                f"Time Commitment: {request.q2}",
+                f"Learning Style: {request.q3}",
             ],
         )
 
@@ -94,6 +100,63 @@ async def generate_roadmap(request: OnboardingRequest) -> dict:
         """
 
         # Use the ai service to generate the roadmap
+        response = await ai_service.generate(prompt)
+        return {"content": response}
+
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.post("/generate-roadmap-v2")
+async def generate_roadmap_v2(request: OnboardingRequest) -> dict:
+    """Generate the final learning roadmap in a structured flow format."""
+    try:
+        context = "\n".join(
+            [
+                f"Learning Topic: {request.learning_topic}",
+                f"End Goal: {request.end_goal}",
+                f"Experience Level: {request.q1}",
+                f"Time Commitment: {request.q2}",
+                f"Learning Style: {request.q3}",
+            ],
+        )
+
+        prompt = f"""Based on this context, create a structured learning roadmap:
+        {context}
+
+        Provide the response in the following JSON structure:
+        {{
+            "nodes": [
+                {{
+                    "id": "string",
+                    "type": "default",
+                    "position": {{ "x": number, "y": number }},
+                    "data": {{
+                        "label": "string",
+                        "description": "string",
+                        "metadata": {{
+                            "type": "milestone | task | concept",
+                            "category": "learning",
+                            "timeEstimate": "string",
+                            "prerequisites": ["node-ids"],
+                            "createdAt": "ISO-date"
+                        }}
+                    }}
+                }}
+            ],
+            "edges": [
+                {{
+                    "id": "string",
+                    "source": "node-id",
+                    "target": "node-id"
+                }}
+            ]
+        }}
+
+        IMPORTANT: The response should only be the JSON structure, nothing else. No formatting, no comments, no explanations.
+        """
+
+        # Use the ai service to generate the structured roadmap
         response = await ai_service.generate(prompt)
         return {"content": response}
 

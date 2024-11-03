@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { useOnboardingState } from '../../hooks/useOnboardingState';
 import OnboardingQuestion from '../OnboardingQuestion';
+import { Loader2 } from "lucide-react";
 
 const OnboardingFlow = ({ isOpen, onComplete }) => {
   const {
@@ -21,6 +22,7 @@ const OnboardingFlow = ({ isOpen, onComplete }) => {
     isLastStep,
     handleNext,
     handleBack,
+    isSubmitting,
   } = useOnboardingState({ onComplete });
 
   return (
@@ -46,16 +48,24 @@ const OnboardingFlow = ({ isOpen, onComplete }) => {
               <Button
                 variant="outline"
                 onClick={handleBack}
+                disabled={isSubmitting}
               >
                 Back
               </Button>
             )}
             <Button 
               onClick={handleNext}
-              disabled={!currentAnswer}
+              disabled={!currentAnswer || isSubmitting}
               className={isFirstStep ? 'w-full' : ''}
             >
-              {isLastStep ? 'Get Started' : 'Next'}
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Processing
+                </>
+              ) : (
+                isLastStep ? 'Get Started' : 'Next'
+              )}
             </Button>
           </div>
         </DialogFooter>
