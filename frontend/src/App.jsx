@@ -11,6 +11,7 @@ const App = () => {
   const [userPreferences, setUserPreferences] = useState(null);
   const { resetOnboarding } = useOnboarding();
   const { toast } = useToast();
+  const flowRef = React.useRef(null);
 
   useEffect(() => {
     checkOnboardingStatus();
@@ -22,7 +23,6 @@ const App = () => {
       setShowOnboarding(true);
     } else {
       setUserPreferences(JSON.parse(savedPreferences));
-      setShowOnboarding(false);
     }
   };
 
@@ -45,12 +45,25 @@ const App = () => {
     });
   };
 
+  const handleResetFlow = () => {
+    if (flowRef.current?.resetFlow) {
+      flowRef.current.resetFlow();
+      toast({
+        title: "Flow Reset",
+        description: "The flow has been reset to its initial state.",
+      });
+    }
+  };
+
   return (
     <div className="app-container">
-      <FlowCanvas />
-      <SettingsMenu onResetOnboarding={handleResetOnboarding} />
-      <OnboardingFlow 
-        isOpen={showOnboarding} 
+      <FlowCanvas ref={flowRef} />
+      <SettingsMenu
+        onResetOnboarding={handleResetOnboarding}
+        onResetFlow={handleResetFlow}
+      />
+      <OnboardingFlow
+        isOpen={showOnboarding}
         onComplete={handleOnboardingComplete}
       />
       <Toaster />

@@ -29,7 +29,7 @@ const FlowCanvas = () => {
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const [selectedNode, setSelectedNode] = useState(null);
-  
+
   const { handleConnect, handleNodeDragStop } = useFlowHandlers({ setEdges, setNodes });
 
   useEffect(() => {
@@ -106,4 +106,3 @@ const FlowCanvas = () => {
 };
 
 export default FlowCanvas;
-
