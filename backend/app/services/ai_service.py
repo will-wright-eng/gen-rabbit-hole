@@ -7,13 +7,21 @@ from dotenv import load_dotenv
 
 import wandb
 
+import logging
+
+logging.basicConfig(level=logging.INFO)
 
 load_dotenv()
 
 
 class AIService:
     def __init__(self) -> None:
-        os.environ["GEMINI_API_KEY"] = os.getenv("GEMINI_API_KEY")
+        gemini_api_key = os.getenv("GEMINI_API_KEY")
+        if gemini_api_key:
+            os.environ["GEMINI_API_KEY"] = gemini_api_key
+        else:
+            logging.warning("GEMINI_API_KEY is not set")
+            raise ValueError("GEMINI_API_KEY is not set")
 
         # Set up WandB callback
         litellm.success_callback = ["wandb"]
