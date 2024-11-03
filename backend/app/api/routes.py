@@ -2,10 +2,10 @@ from fastapi import APIRouter, HTTPException, Depends
 from typing import List, Dict
 from uuid import UUID
 
-from app.services.tree_service import TreeService
-from app.services.llm_service import LLMService
-from app.models.session import SessionManager
-from app.models.tree import NodeStatus, Tree, Node
+from services.tree_service import TreeService
+from services.llm_service import LLMService
+from models.session import SessionManager
+from models.tree import NodeStatus, Tree, Node
 
 # Initialize services
 router = APIRouter()

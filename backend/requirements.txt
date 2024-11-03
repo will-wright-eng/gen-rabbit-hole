@@ -4,5 +4,5 @@ pydantic
 litellm
 wandb
 python-dotenv
-
-
+rich
+google-generativeai
