@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   ReactFlow,
   MiniMap,
@@ -10,13 +10,19 @@ import {
 } from '@xyflow/react';
 import { useFlowHandlers } from '../../hooks/useFlowHandlers';
 import { INITIAL_NODES, INITIAL_EDGES } from './flowConfig';
+import NodeDetailsDrawer from './NodeDetailsDrawer';
 import '@xyflow/react/dist/style.css';
 
 const FlowCanvas = () => {
   const [nodes, setNodes, onNodesChange] = useNodesState(INITIAL_NODES);
   const [edges, setEdges, onEdgesChange] = useEdgesState(INITIAL_EDGES);
+  const [selectedNode, setSelectedNode] = useState(null);
   
   const { handleConnect, handleNodeDragStop } = useFlowHandlers({ setEdges, setNodes });
+
+  const onNodeClick = useCallback((_, node) => {
+    setSelectedNode(node);
+  }, []);
 
   return (
     <div className="reactflow-wrapper">
@@ -27,14 +33,20 @@ const FlowCanvas = () => {
         onEdgesChange={onEdgesChange}
         onConnect={handleConnect}
         onNodeDragStop={handleNodeDragStop}
+        onNodeClick={onNodeClick}
         fitView
       >
         <Controls />
         <MiniMap />
         <Background variant="dots" gap={12} size={1} />
       </ReactFlow>
+      <NodeDetailsDrawer 
+        node={selectedNode}
+        onClose={() => setSelectedNode(null)}
+      />
     </div>
   );
 };
 
 export default FlowCanvas;
+
