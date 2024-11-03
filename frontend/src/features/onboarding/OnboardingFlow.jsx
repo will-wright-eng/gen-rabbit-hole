@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useOnboarding } from '../../hooks/useOnboarding';
 import {
   Dialog,
   DialogContent,
@@ -10,40 +11,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 
-const questions = [
-  {
-    id: 'name',
-    title: 'Welcome! What\'s your name?',
-    type: 'text',
-    placeholder: 'Enter your name',
-  },
-  {
-    id: 'role',
-    title: 'What best describes your role?',
-    type: 'select',
-    options: [
-      'Developer',
-      'Designer',
-      'Product Manager',
-      'Business Analyst',
-      'Other'
-    ]
-  },
-  {
-    id: 'useCase',
-    title: 'How do you plan to use this tool?',
-    type: 'select',
-    options: [
-      'Process Mapping',
-      'System Architecture',
-      'Workflow Design',
-      'Organization Charts',
-      'Other'
-    ]
-  }
-];
-
-export default function OnboardingFlow({ isOpen, onComplete }) {
+const OnboardingFlow = ({ isOpen, onComplete }) => {
+  const { submitOnboarding, error, isLoading, questions } = useOnboarding();
   const [currentStep, setCurrentStep] = useState(0);
   const [answers, setAnswers] = useState({});
   const [currentAnswer, setCurrentAnswer] = useState('');
@@ -75,7 +44,7 @@ export default function OnboardingFlow({ isOpen, onComplete }) {
     <Dialog open={isOpen} onOpenChange={() => {}}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>{currentQuestion.title}</DialogTitle>
+          <DialogTitle>{questions[currentStep].title}</DialogTitle>
         </DialogHeader>
 
         <div className="py-4">
@@ -127,7 +96,9 @@ export default function OnboardingFlow({ isOpen, onComplete }) {
             </Button>
           </div>
         </DialogFooter>
-      </DialogContent>
+        </DialogContent>
     </Dialog>
   );
 };
+
+export default OnboardingFlow;

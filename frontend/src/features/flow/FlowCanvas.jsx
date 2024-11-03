@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import {
   ReactFlow,
   MiniMap,
@@ -9,16 +9,46 @@ import {
   addEdge,
 } from '@xyflow/react';
 import { useFlowHandlers } from '../../hooks/useFlowHandlers';
-import { INITIAL_NODES, INITIAL_EDGES } from './flowConfig';
 import NodeDetailsDrawer from './NodeDetailsDrawer';
+import { useFlow } from '../../hooks/useFlow';
 import '@xyflow/react/dist/style.css';
+// import { INITIAL_NODES, INITIAL_EDGES } from './flowConfig';
 
 const FlowCanvas = () => {
-  const [nodes, setNodes, onNodesChange] = useNodesState(INITIAL_NODES);
-  const [edges, setEdges, onEdgesChange] = useEdgesState(INITIAL_EDGES);
+  const {
+    flowData,
+    flowError,
+    isLoadingFlow,
+    loadFlow,
+    saveFlowData,
+    updateNodeData
+  } = useFlow();
+
+  const [nodes, setNodes, onNodesChange] = useNodesState([]);
+  const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const [selectedNode, setSelectedNode] = useState(null);
   
   const { handleConnect, handleNodeDragStop } = useFlowHandlers({ setEdges, setNodes });
+
+  useEffect(() => {
+    const initializeFlow = async () => {
+      try {
+        const flow = await loadFlow('default-flow');
+        if (flow) {
+          setNodes(flow.nodes || flowData.nodes);
+          setEdges(flow.edges || flowData.edges);
+        }
+      } catch (error) {
+        // Fallback data will be used automatically
+        if (flowData) {
+          setNodes(flowData.nodes);
+          setEdges(flowData.edges);
+        }
+      }
+    };
+
+    initializeFlow();
+  }, []);
 
   const onNodeClick = useCallback((_, node) => {
     setSelectedNode(node);
