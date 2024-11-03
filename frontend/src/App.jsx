@@ -4,7 +4,7 @@ import OnboardingFlow from './features/onboarding/OnboardingFlow';
 import SettingsMenu from './components/ui/settings-menu';
 import { useOnboarding } from './hooks/useOnboarding';
 import { Toaster } from "@/components/ui/toaster";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 
 const App = () => {
   const [showOnboarding, setShowOnboarding] = useState(false);

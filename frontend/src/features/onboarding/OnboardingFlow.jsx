@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { useOnboarding } from '../../hooks/useOnboarding';
 import {
   Dialog,
   DialogContent,
@@ -10,31 +9,37 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
+import { useOnboarding } from '../../hooks/useOnboarding';
+import { Progress } from "@/components/ui/progress";
 
 const OnboardingFlow = ({ isOpen, onComplete }) => {
-  const { submitOnboarding, error, isLoading, questions } = useOnboarding();
+  const { submitOnboarding, questions } = useOnboarding();
   const [currentStep, setCurrentStep] = useState(0);
   const [answers, setAnswers] = useState({});
   const [currentAnswer, setCurrentAnswer] = useState('');
 
-  const handleNext = () => {
+  const progress = ((currentStep + 1) / questions.length) * 100;
+
+  const handleNext = async () => {
     if (!currentAnswer) return;
 
-    setAnswers(prev => ({
-      ...prev,
+    const updatedAnswers = {
+      ...answers,
       [questions[currentStep].id]: currentAnswer
-    }));
+    };
 
     if (currentStep === questions.length - 1) {
-      onComplete(answers);
+      try {
+        const result = await submitOnboarding(updatedAnswers);
+        onComplete(result);
+      } catch (error) {
+        console.error('Onboarding failed:', error);
+      }
     } else {
+      setAnswers(updatedAnswers);
       setCurrentStep(prev => prev + 1);
       setCurrentAnswer('');
     }
-  };
-
-  const handleOptionSelect = (option) => {
-    setCurrentAnswer(option);
   };
 
   const currentQuestion = questions[currentStep];
@@ -44,8 +49,10 @@ const OnboardingFlow = ({ isOpen, onComplete }) => {
     <Dialog open={isOpen} onOpenChange={() => {}}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>{questions[currentStep].title}</DialogTitle>
+          <DialogTitle>{currentQuestion.title}</DialogTitle>
         </DialogHeader>
+
+        <Progress value={progress} className="mb-4" />
 
         <div className="py-4">
           {currentQuestion.type === 'text' ? (
@@ -63,7 +70,7 @@ const OnboardingFlow = ({ isOpen, onComplete }) => {
                   className={`cursor-pointer transition-colors hover:bg-muted ${
                     currentAnswer === option ? 'border-primary' : ''
                   }`}
-                  onClick={() => handleOptionSelect(option)}
+                  onClick={() => setCurrentAnswer(option)}
                 >
                   <CardContent className="p-4">
                     {option}
@@ -81,7 +88,7 @@ const OnboardingFlow = ({ isOpen, onComplete }) => {
                 variant="outline"
                 onClick={() => {
                   setCurrentStep(prev => prev - 1);
-                  setCurrentAnswer('');
+                  setCurrentAnswer(answers[questions[currentStep - 1].id] || '');
                 }}
               >
                 Back
@@ -96,7 +103,7 @@ const OnboardingFlow = ({ isOpen, onComplete }) => {
             </Button>
           </div>
         </DialogFooter>
-        </DialogContent>
+      </DialogContent>
     </Dialog>
   );
 };
