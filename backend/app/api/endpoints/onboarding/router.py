@@ -1,4 +1,4 @@
-
+# app/api/endpoints/onboarding/router.py
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
@@ -6,7 +6,7 @@ from app.services.ai_service import AIService
 
 
 router = APIRouter(prefix="/api/onboarding", tags=["onboarding"])
-ai_service = AIService()  # Changed from llm_service to ai_service
+ai_service = AIService()
 
 
 class OnboardingRequest(BaseModel):
@@ -19,15 +19,8 @@ class Answer(BaseModel):
     answer: str
 
 
-class RoadmapRequest(BaseModel):
-    learning_topic: str
-    end_goal: str
-    answers: list[Answer]
-
-
-@router.post("/start")
-async def start_onboarding(request: OnboardingRequest) -> list[dict]:
-    """Start the onboarding process with initial topic and goal."""
+def get_initial_questions() -> list[dict]:
+    """Return the initial set of onboarding questions."""
     return [
         {
             "id": "q1",
@@ -62,8 +55,20 @@ async def start_onboarding(request: OnboardingRequest) -> list[dict]:
     ]
 
 
+@router.get("/start")
+async def get_onboarding():
+    """Get the initial onboarding questions."""
+    return get_initial_questions()
+
+
+@router.post("/start")
+async def start_onboarding(request: OnboardingRequest) -> list[dict]:
+    """Start the onboarding process with initial topic and goal."""
+    return get_initial_questions()
+
+
 @router.post("/generate-roadmap")
-async def generate_roadmap(request: RoadmapRequest) -> dict:
+async def generate_roadmap(request: OnboardingRequest) -> dict:
     """Generate the final learning roadmap."""
     try:
         # Format the context
@@ -71,8 +76,6 @@ async def generate_roadmap(request: RoadmapRequest) -> dict:
             [
                 f"Learning Topic: {request.learning_topic}",
                 f"End Goal: {request.end_goal}",
-                "User Responses:",
-                *[f"Q: {a.question}\nA: {a.answer}" for a in request.answers],
             ],
         )
 
@@ -91,7 +94,7 @@ async def generate_roadmap(request: RoadmapRequest) -> dict:
         """
 
         # Use the ai service to generate the roadmap
-        response = await ai_service.generate(prompt)  # Changed from llm_service._get_completion
+        response = await ai_service.generate(prompt)
         return {"content": response}
 
     except Exception as e:
