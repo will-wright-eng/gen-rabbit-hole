@@ -47,25 +47,41 @@ class LLMService:
 
     async def _get_completion(self, prompt: str) -> str:
         """Helper method to get completion with strict rate limiting"""
-        # Strict rate limiting - always wait for minimum delay
-        current_time = time.time()
-        time_since_last = current_time - self.last_call_time
-        if time_since_last < self.min_delay:
-            wait_time = self.min_delay - time_since_last
-            self.logger.info(f"Rate limiting: waiting {wait_time:.2f}s")
-            await asyncio.sleep(wait_time)
+        max_retries = 1
         
-        try:
-            self.total_calls += 1
-            self.last_call_time = time.time()
+        for attempt in range(max_retries + 1):
+            # Strict rate limiting - always wait for minimum delay
+            current_time = time.time()
+            time_since_last = current_time - self.last_call_time
+            if time_since_last < self.min_delay:
+                wait_time = self.min_delay - time_since_last
+                self.logger.info(f"Rate limiting: waiting {wait_time:.2f}s")
+                await asyncio.sleep(wait_time)
             
-            self.logger.info(f"Making API call #{self.total_calls}")
-            response = self.model.generate_content(prompt)
-            return response.text
-            
-        except Exception as e:
-            self.logger.error(f"Error getting completion from Vertex AI: {e}")
-            raise
+            try:
+                self.total_calls += 1
+                self.last_call_time = time.time()
+                
+                self.logger.info(f"Making API call #{self.total_calls}")
+                response = self.model.generate_content(prompt)
+                
+                if not response.text or response.text.isspace():
+                    if attempt < max_retries:
+                        self.logger.warning("Received empty response, retrying...")
+                        await asyncio.sleep(1)  # Short delay before retry
+                        continue
+                    else:
+                        raise ValueError("Received empty response after retry")
+                        
+                return response.text
+                
+            except Exception as e:
+                if attempt < max_retries:
+                    self.logger.warning(f"Error on attempt {attempt + 1}, retrying: {e}")
+                    await asyncio.sleep(1)
+                    continue
+                self.logger.error(f"Error getting completion from Vertex AI: {e}")
+                raise
 
     async def _parse_json_response(self, response: str) -> Dict:
         """Helper method to parse JSON response with better cleaning"""
@@ -116,17 +132,9 @@ class LLMService:
             try:
                 return json.loads(cleaned_response)
             except json.JSONDecodeError as e:
-                print("First parsing attempt failed, trying to fix common issues...")
-                
-                # Fix common JSON formatting issues
-                cleaned_response = cleaned_response.replace('",\n"', '",')  # Fix line breaks between fields
-                cleaned_response = cleaned_response.replace('}\n{', '},{')  # Fix line breaks between objects
-                
-                # Ensure arrays are properly formatted
-                if cleaned_response.strip().startswith('[') and not cleaned_response.strip().endswith(']'):
-                    cleaned_response = cleaned_response.strip() + ']'
-                
-                return json.loads(cleaned_response)
+                print(f"Failed to parse JSON. Response was: {response}")  # Debug line
+                print(f"Cleaned response was: {cleaned_response}")  # Debug line
+                raise ValueError(f"Failed to parse JSON response: {str(e)}")
                 
         except ValueError as e:
             # Re-raise ValueError for specific handling

@@ -6,6 +6,7 @@ from services.tree_service import TreeService
 from services.llm_service import LLMService
 from models.session import SessionManager
 from models.tree import NodeStatus, Tree, Node
+from models.context import LearningContext
 
 # Initialize services
 router = APIRouter()
@@ -21,24 +22,32 @@ class ChatMessage(BaseModel):
 
 class CreateSessionRequest(BaseModel):
     user_id: str
-    chat_history: List[str]
+    chat_history: List[Dict[str, str]]
 
 class NodeUpdateRequest(BaseModel):
     status: NodeStatus
 
-@router.post("/chat/assessment")
-async def create_assessment(messages: List[ChatMessage]):
-    """Generate initial assessment from chat history"""
-    chat_history = [msg.content for msg in messages]
-    assessment = await llm_service.generate_initial_assessment(chat_history)
-    return assessment
+@router.post("/chat/questions")
+async def generate_next_question(messages: List[ChatMessage]):
+    """Generate follow-up question based on chat history"""
+    context = LearningContext()
+    for msg in messages:
+        context.add_message("user" if msg.role == "user" else "assistant", msg.content)
+    
+    next_question = await llm_service.generate_next_question(context)
+    return {"question": next_question}
 
 @router.post("/sessions")
 async def create_session(request: CreateSessionRequest):
     """Create new learning session with generated tree"""
     try:
-        # Generate learning tree
-        tree = await tree_service.create_tree(request.chat_history)
+        # Create learning context from chat history
+        context = LearningContext()
+        for msg in request.chat_history:
+            context.add_message(msg["role"], msg["content"])
+        
+        # Generate learning tree using context
+        tree = await tree_service.create_tree(context)
         
         # Create session
         session = session_manager.create_session(
@@ -49,7 +58,7 @@ async def create_session(request: CreateSessionRequest):
         return {
             "session_id": session.id,
             "tree": tree,
-            "assessment": await llm_service.generate_initial_assessment(request.chat_history)
+            "assessment": await llm_service.generate_initial_assessment(context)
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
