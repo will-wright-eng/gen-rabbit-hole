@@ -1,48 +1,77 @@
 export const MOCK_FLOW_DATA = {
   nodes: [
     {
-      id: '1',
+      id: 'root',
+      type: 'default',
       position: { x: 0, y: 0 },
       data: {
-        label: 'Start',
-        description: 'Entry point of the flow',
+        label: 'Root Node',
+        description: 'Starting point of the flow',
         metadata: {
-          createdAt: '2024-03-15',
-          category: 'input'
+          type: 'root',
+          category: 'system',
+          createdAt: '2024-03-01T00:00:00.000Z'
         }
-      },
-      type: 'default'
+      }
     },
     {
-      id: '2',
+      id: 'node-1',
+      type: 'default',
+      position: { x: -200, y: 100 },
+      data: {
+        label: 'Option A',
+        description: 'First branch of the story',
+        metadata: {
+          type: 'choice',
+          category: 'story',
+          createdAt: '2024-03-01T00:00:00.000Z'
+        }
+      }
+    },
+    {
+      id: 'node-2',
+      type: 'default',
       position: { x: 0, y: 100 },
       data: {
-        label: 'Process',
-        description: 'Main processing step',
+        label: 'Option B',
+        description: 'Second branch of the story',
         metadata: {
-          createdAt: '2024-03-15',
-          category: 'process'
+          type: 'choice',
+          category: 'story',
+          createdAt: '2024-03-01T00:00:00.000Z'
         }
-      },
-      type: 'default'
+      }
     },
     {
-      id: '3',
-      position: { x: 0, y: 200 },
+      id: 'node-3',
+      type: 'default',
+      position: { x: 200, y: 100 },
       data: {
-        label: 'End',
-        description: 'Flow completion',
+        label: 'Option C',
+        description: 'Third branch of the story',
         metadata: {
-          createdAt: '2024-03-15',
-          category: 'output'
+          type: 'choice',
+          category: 'story',
+          createdAt: '2024-03-01T00:00:00.000Z'
         }
-      },
-      type: 'default'
+      }
     }
   ],
   edges: [
-    { id: 'e1-2', source: '1', target: '2', type: 'default' },
-    { id: 'e2-3', source: '2', target: '3', type: 'default' }
+    {
+      id: 'edge-1',
+      source: 'root',
+      target: 'node-1'
+    },
+    {
+      id: 'edge-2',
+      source: 'root',
+      target: 'node-2'
+    },
+    {
+      id: 'edge-3',
+      source: 'root',
+      target: 'node-3'
+    }
   ]
 };
-

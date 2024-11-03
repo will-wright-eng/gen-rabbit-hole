@@ -1,5 +1,5 @@
-import { useApi } from './useApi';
-import { MOCK_ONBOARDING_DATA } from '../lib/mock-data/onboarding';
+import { useApi } from '@/hooks/useApi';
+import { MOCK_ONBOARDING_DATA } from '@/lib/mock-data/onboarding';
 
 export function useOnboarding() {
   const {
@@ -7,7 +7,7 @@ export function useOnboarding() {
     error,
     isLoading,
     execute: savePreferences
-  } = useApi('/api/onboarding', {
+  } = useApi('/api/onboarding', { 
     method: 'POST',
     fallbackData: MOCK_ONBOARDING_DATA.defaultAnswers
   });
@@ -19,7 +19,6 @@ export function useOnboarding() {
       return response;
     } catch (error) {
       console.error('Failed to save onboarding preferences:', error);
-      // Use fallback data
       const fallbackResponse = {
         ...MOCK_ONBOARDING_DATA.defaultAnswers,
         ...answers
@@ -29,11 +28,17 @@ export function useOnboarding() {
     }
   };
 
+  const resetOnboarding = () => {
+    localStorage.removeItem('userPreferences');
+    return true;
+  };
+
   return {
     preferences,
     error,
     isLoading,
     submitOnboarding,
+    resetOnboarding,
     questions: MOCK_ONBOARDING_DATA.questions
   };
 }

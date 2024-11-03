@@ -1,34 +1,44 @@
-import React, { useState, useEffect } from 'react';
-import FlowCanvas from './features/flow/FlowCanvas';
-import OnboardingFlow from './features/onboarding/OnboardingFlow';
+import React from 'react';
+import FlowCanvas from '@/features/flow/components/FlowCanvas';
+import OnboardingFlow from '@/features/onboarding/components/OnboardingFlow';
+import SettingsMenu from '@/components/ui/settings-menu';
+import { Toaster } from "@/components/ui/toaster";
+import { useToast } from "@/hooks/use-toast";
+import { useAppState } from '@/hooks/useAppState';
 
 const App = () => {
-  const [showOnboarding, setShowOnboarding] = useState(false);
-  const [userPreferences, setUserPreferences] = useState(null);
+  const {
+    showOnboarding,
+    userPreferences,
+    handleOnboardingComplete,
+    handleResetOnboarding,
+  } = useAppState();
 
-  useEffect(() => {
-    // Check if user has completed onboarding before
-    const savedPreferences = localStorage.getItem('userPreferences');
-    if (!savedPreferences) {
-      setShowOnboarding(true);
-    } else {
-      setUserPreferences(JSON.parse(savedPreferences));
+  const { toast } = useToast();
+  const flowRef = React.useRef(null);
+
+  const handleResetFlow = () => {
+    if (flowRef.current?.resetFlow) {
+      flowRef.current.resetFlow();
+      toast({
+        title: "Flow Reset",
+        description: "The flow has been reset to its initial state.",
+      });
     }
-  }, []);
-
-  const handleOnboardingComplete = (answers) => {
-    setUserPreferences(answers);
-    localStorage.setItem('userPreferences', JSON.stringify(answers));
-    setShowOnboarding(false);
   };
 
   return (
     <div className="app-container">
-      <FlowCanvas />
+      <FlowCanvas ref={flowRef} />
+      <SettingsMenu
+        onResetOnboarding={handleResetOnboarding}
+        onResetFlow={handleResetFlow}
+      />
       <OnboardingFlow
         isOpen={showOnboarding}
         onComplete={handleOnboardingComplete}
       />
+      <Toaster />
     </div>
   );
 };
