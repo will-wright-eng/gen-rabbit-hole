@@ -1,5 +1,5 @@
-import { useApi } from './useApi';
-import { MOCK_ONBOARDING_DATA } from '../lib/mock-data/onboarding';
+import { useApi } from '@/hooks/useApi';
+import { MOCK_ONBOARDING_DATA } from '@/lib/mock-data/onboarding';
 
 export function useOnboarding() {
   const {

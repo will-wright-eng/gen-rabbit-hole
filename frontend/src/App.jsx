@@ -1,49 +1,21 @@
-import React, { useState, useEffect } from 'react';
-import FlowCanvas from './features/flow/FlowCanvas';
-import OnboardingFlow from './features/onboarding/OnboardingFlow';
-import SettingsMenu from './components/ui/settings-menu';
-import { useOnboarding } from './hooks/useOnboarding';
+import React from 'react';
+import FlowCanvas from '@/features/flow/components/FlowCanvas';
+import OnboardingFlow from '@/features/onboarding/components/OnboardingFlow';
+import SettingsMenu from '@/components/ui/settings-menu';
 import { Toaster } from "@/components/ui/toaster";
 import { useToast } from "@/hooks/use-toast";
+import { useAppState } from '@/hooks/useAppState';
 
 const App = () => {
-  const [showOnboarding, setShowOnboarding] = useState(false);
-  const [userPreferences, setUserPreferences] = useState(null);
-  const { resetOnboarding } = useOnboarding();
+  const {
+    showOnboarding,
+    userPreferences,
+    handleOnboardingComplete,
+    handleResetOnboarding,
+  } = useAppState();
+
   const { toast } = useToast();
   const flowRef = React.useRef(null);
-
-  useEffect(() => {
-    checkOnboardingStatus();
-  }, []);
-
-  const checkOnboardingStatus = () => {
-    const savedPreferences = localStorage.getItem('userPreferences');
-    if (!savedPreferences) {
-      setShowOnboarding(true);
-    } else {
-      setUserPreferences(JSON.parse(savedPreferences));
-    }
-  };
-
-  const handleOnboardingComplete = (answers) => {
-    setUserPreferences(answers);
-    setShowOnboarding(false);
-    toast({
-      title: "Welcome!",
-      description: `Great to have you here, ${answers.name}!`,
-    });
-  };
-
-  const handleResetOnboarding = () => {
-    resetOnboarding();
-    setShowOnboarding(true);
-    setUserPreferences(null);
-    toast({
-      title: "Onboarding Reset",
-      description: "You can now go through the onboarding process again.",
-    });
-  };
 
   const handleResetFlow = () => {
     if (flowRef.current?.resetFlow) {

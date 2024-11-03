@@ -1,5 +1,5 @@
-import { useApi } from './useApi';
-import { MOCK_FLOW_DATA } from '../lib/mock-data/flow';
+import { useApi } from '@/hooks/useApi';
+import { MOCK_FLOW_DATA } from '@/lib/mock-data/flow';
 
 export function useFlow() {
   const {
