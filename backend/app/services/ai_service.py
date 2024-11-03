@@ -29,16 +29,14 @@ class AIService:
         )
 
     async def _generate_completion(self, messages: list[dict[str, str]]) -> str:
-        try:
-            response = await litellm.acompletion(
-                model="gemini/gemini-1.5-pro",
-                messages=messages,
-                temperature=0.7,
-                max_tokens=1000,
-            )
-            return response.choices[0].message.content
-        except Exception:
-            raise
+        """Generate completion using the AI model."""
+        response = await litellm.acompletion(
+            model="gemini/gemini-1.5-pro",
+            messages=messages,
+            temperature=0.7,
+            max_tokens=1000,
+        )
+        return response.choices[0].message.content
 
     async def generate_questions(self, context: dict[str, Any]) -> list[dict[str, Any]]:
         system_message = """You are an expert learning path advisor. Your task is to generate questions in valid JSON format.
