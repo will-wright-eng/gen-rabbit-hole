@@ -8,11 +8,11 @@ import {
   useEdgesState,
   addEdge,
 } from '@xyflow/react';
+import { Toaster } from "@/components/ui/toaster";
 import { useFlowHandlers } from '../../hooks/useFlowHandlers';
 import NodeDetailsDrawer from './NodeDetailsDrawer';
 import { useFlow } from '../../hooks/useFlow';
 import '@xyflow/react/dist/style.css';
-// import { INITIAL_NODES, INITIAL_EDGES } from './flowConfig';
 
 const FlowCanvas = () => {
   const {
@@ -21,7 +21,9 @@ const FlowCanvas = () => {
     isLoadingFlow,
     loadFlow,
     saveFlowData,
-    updateNodeData
+    updateNodeData,
+    generateNodesFromContext,
+    isGenerating
   } = useFlow();
 
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
@@ -54,6 +56,31 @@ const FlowCanvas = () => {
     setSelectedNode(node);
   }, []);
 
+  const handleGenerateNodes = async (sourceNodeId, count) => {
+    const generatedNodes = await generateNodesFromContext(sourceNodeId, count);
+
+    // Add new nodes to the canvas
+    const sourceNode = nodes.find(n => n.id === sourceNodeId);
+    const positionedNodes = generatedNodes.map((node, index) => ({
+      ...node,
+      position: {
+        x: sourceNode.position.x + 200,
+        y: sourceNode.position.y + (index * 100)
+      }
+    }));
+
+    // Add edges connecting to the source node
+    const newEdges = positionedNodes.map(node => ({
+      id: `e${sourceNodeId}-${node.id}`,
+      source: sourceNodeId,
+      target: node.id,
+      type: 'default'
+    }));
+
+    setNodes(nodes => [...nodes, ...positionedNodes]);
+    setEdges(edges => [...edges, ...newEdges]);
+  };
+
   return (
     <div className="reactflow-wrapper">
       <ReactFlow
@@ -61,8 +88,6 @@ const FlowCanvas = () => {
         edges={edges}
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
-        onConnect={handleConnect}
-        onNodeDragStop={handleNodeDragStop}
         onNodeClick={onNodeClick}
         fitView
       >
@@ -73,7 +98,9 @@ const FlowCanvas = () => {
       <NodeDetailsDrawer 
         node={selectedNode}
         onClose={() => setSelectedNode(null)}
+        onGenerateNodes={handleGenerateNodes}
       />
+      <Toaster />
     </div>
   );
 };
