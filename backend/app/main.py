@@ -5,6 +5,8 @@ import os
 from fastapi.middleware.cors import CORSMiddleware
 
 from api.routes import router
+from api.endpoints.lessons import router as lesson_router
+from api.endpoints.onboarding import router as onboarding_router
 
 # Load environment variables
 load_dotenv()
@@ -26,6 +28,8 @@ app.add_middleware(
 
 # Include routes
 app.include_router(router, prefix="/api")
+app.include_router(lesson_router, prefix="/api/lessons")
+app.include_router(onboarding_router, prefix="/api/onboarding")
 
 if __name__ == "__main__":
     uvicorn.run(

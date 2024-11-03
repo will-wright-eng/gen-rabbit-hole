@@ -1,7 +1,7 @@
 
 from fastapi import APIRouter
 
-from app.services.lesson_service import LessonService
+from services.lesson_service import LessonService
 
 
 router = APIRouter(prefix="/api/lessons", tags=["lessons"])

@@ -1,7 +1,7 @@
 from typing import Any
 
-from app.schemas.onboarding import OnboardingState, Question
-from app.services.ai_service import AIService
+from schemas.onboarding import OnboardingState, Question
+from services.ai_service import AIService
 
 
 class OnboardingService:

@@ -1,4 +1,4 @@
-from app.services.ai_service import AIService
+from services.ai_service import AIService
 
 
 class LessonService:

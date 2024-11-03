@@ -1,8 +1,8 @@
 
 from fastapi import APIRouter, HTTPException
 
-from app.schemas.onboarding import InitialResponse, OnboardingState, Question
-from app.services.onboarding_service import OnboardingService
+from schemas.onboarding import InitialResponse, OnboardingState, Question
+from services.onboarding_service import OnboardingService
 
 
 router = APIRouter(prefix="/api/onboarding", tags=["onboarding"])
