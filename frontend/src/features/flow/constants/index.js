@@ -4,5 +4,10 @@ export const FLOW_DEFAULTS = {
   NODE_SPACING: {
     HORIZONTAL: 200,
     VERTICAL: 100
+  },
+  NODE_TYPES: {
+    DEFAULT: 'default',
+    TASK: 'task',
+    DECISION: 'decision'
   }
 };
