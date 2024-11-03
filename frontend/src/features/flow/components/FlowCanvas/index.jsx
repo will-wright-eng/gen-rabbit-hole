@@ -5,6 +5,7 @@ import { useFlowHandlers } from '../../hooks/useFlowHandlers';
 import { useFlowState } from '../../hooks/useFlowState';
 import NodeDetailsDrawer from '../NodeDetails';
 import '@xyflow/react/dist/style.css';
+import { calculateNodePosition, createEdge } from '../../utils/flowUtils';
 
 const FlowCanvas = React.forwardRef((props, ref) => {
   const {
@@ -30,7 +31,7 @@ const FlowCanvas = React.forwardRef((props, ref) => {
   }, []);
 
   const handleGenerateNodes = async (sourceNodeId, count) => {
-    const generatedNodes = await generateNodesFromContext(sourceNodeId, count);
+    const generatedNodes = await generateNodesFromContext(sourceNodeId, count, nodes, edges);
     const sourceNode = nodes.find(n => n.id === sourceNodeId);
     
     const positionedNodes = generatedNodes.map((node, index) => ({

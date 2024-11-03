@@ -1,5 +1,7 @@
 import { useApi } from '@/hooks/useApi';
 import { MOCK_FLOW_DATA } from '@/lib/mock-data/flow';
+import { NodeGenerator } from '@/lib/mock-data/node-generator';
+import { serializeGraphState } from '../utils/flowUtils';
 
 export function useFlow() {
   const {
@@ -76,29 +78,29 @@ export function useFlow() {
     }
   });
 
-  const generateNodesFromContext = async (nodeId, count = 1) => {
+  const generateNodesFromContext = async (nodeId, count = 1, nodes = [], edges = []) => {
     try {
-      const result = await generateNodes({ sourceNodeId: nodeId, count });
+      const graphContext = serializeGraphState(nodes, edges);
+
+      const result = await generateNodes({
+        sourceNodeId: nodeId,
+        count,
+        graphContext
+      });
+
       return result.nodes;
     } catch (error) {
       console.error('Failed to generate nodes:', error);
-      // Return fallback generated nodes
-      return Array(count).fill(null).map((_, index) => ({
-        id: `generated-${Date.now()}-${index}`,
-        position: {
-          x: 200 + (index * 100),
-          y: 0
-        },
-        data: {
-          label: `Generated Node ${index + 1}`,
-          description: 'Fallback generated node',
-          metadata: {
-            createdAt: new Date().toISOString(),
-            category: 'generated'
-          }
-        },
-        type: 'default'
-      }));
+
+      const sourceNode = nodes.find(n => n.id === nodeId);
+      if (!sourceNode) {
+        throw new Error('Source node not found');
+      }
+
+      return NodeGenerator.generateNodes(sourceNode, count, {
+        nodes,
+        edges
+      });
     }
   };
 
