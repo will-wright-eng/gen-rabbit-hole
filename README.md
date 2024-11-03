@@ -25,3 +25,7 @@ npm run dev
 ```
 
 open `locahost:3000` to view frontend ui
+
+## references
+
+- [aotakeda/learn-thing: Create mind maps to learn new things using AI.](https://github.com/aotakeda/learn-thing)
