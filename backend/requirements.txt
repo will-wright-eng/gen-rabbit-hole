@@ -4,5 +4,7 @@ pydantic
 litellm
 wandb
 python-dotenv
+rich
+httpx
 
 
