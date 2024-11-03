@@ -1,109 +1,120 @@
-from typing import TYPE_CHECKING
-
-
-if TYPE_CHECKING:
-    from app.services.ai_service import AIService
+# app/services/tree_service.py
+import uuid
+from typing import Any
 
 
 class TreeService:
     def __init__(self, ai_service: "AIService") -> None:
         self.ai = ai_service
+        self._trees: dict[str, dict[str, Any]] = {}
         self._expanding_nodes = set()
 
-    async def create_tree(self, topic: str, context: dict) -> dict:
-        """Generate initial tree structure."""
-        initial_prompt = """Create an adaptive learning tree for the topic. Return JSON:
-        {
-            "root": {
+    async def get_tree(self, user_id: str) -> dict[str, Any]:
+        """Get or create a learning tree for the user."""
+        if user_id not in self._trees:
+            # Initialize new tree
+            root_node = {
                 "id": "root",
                 "title": "Learning Path",
-                "content": "Overview of the learning journey",
-                "children": []
-            },
-            "nodes": {
-                "node_id": {
-                    "id": "unique_id",
-                    "title": "Concept Title",
-                    "content": "Detailed explanation",
-                    "type": "lesson|task|quiz",
-                    "children": [],
-                    "status": "pending|in_progress|completed",
-                    "prerequisites": [],
-                    "depth": 0
-                }
+                "content": "Your personalized learning journey",
+                "children": [],
+                "type": "root",
+                "status": "in_progress",
+                "prerequisites": [],
+                "depth": 0,
             }
-        }"""
 
-        tree = await self.ai.generate(initial_prompt, {"topic": topic, "context": context})
+            self._trees[user_id] = {"root": root_node, "nodes": {}}
 
-        # Start expanding first level nodes
-        root_node = tree["nodes"].get(tree["root"]["id"])
-        if root_node and root_node["children"]:
-            for child_id in root_node["children"][:2]:  # Limit initial expansion
-                await self.expand_node(tree, child_id, context)
+            # Generate initial nodes
+            await self.expand_node(user_id, "root")
 
-        return tree
+        return self._trees[user_id]
 
-    async def expand_node(self, tree: dict, node_id: str, context: dict) -> list[str]:
+
+    async def expand_node(self, user_id: str, node_id: str) -> list[str]:
         """Dynamically expand a node with new children."""
         if node_id in self._expanding_nodes:
             return []
 
+        # Get or create the tree
+        if user_id not in self._trees:
+            await self.get_tree(user_id)  # This will initialize the tree
+
+        tree = self._trees[user_id]
         self._expanding_nodes.add(node_id)
-        node = tree["nodes"].get(node_id)
-
-        if not node:
-            self._expanding_nodes.remove(node_id)
-            return []
-
-        expansion_prompt = f"""Generate 2-3 follow-up learning nodes for: {node['title']}
-        Return JSON array:
-        [
-            {{
-                "id": "unique_id",
-                "title": "Specific concept or skill",
-                "content": "Clear explanation and learning objectives",
-                "type": "lesson|task|quiz",
-                "prerequisites": [],
-                "depth": {node['depth'] + 1}
-            }}
-        ]"""
 
         try:
-            new_nodes = await self.ai.generate(expansion_prompt, {"parent_node": node, "context": context})
+            # Get the node to expand (either from nodes or root)
+            node = tree["nodes"].get(node_id) or tree["root"]
+            if not node:
+                msg = f"Node {node_id} not found"
+                raise ValueError(msg)
 
-            # Add new nodes to tree
-            child_ids = []
-            for new_node in new_nodes:
-                node_id = new_node["id"]
-                tree["nodes"][node_id] = new_node
-                child_ids.append(node_id)
+            # Generate child nodes
+            child_nodes = [
+                {
+                    "id": str(uuid.uuid4()),
+                    "title": f"Topic {i+1}",
+                    "content": f"Content for topic {i+1}",
+                    "type": "lesson",
+                    "children": [],
+                    "status": "pending",
+                    "prerequisites": [],
+                    "depth": node["depth"] + 1,
+                }
+                for i in range(3)  # Generate 3 sample nodes
+            ]
 
-            node["children"] = child_ids
-            return child_ids
+            # Add nodes to tree
+            new_node_ids = []
+            for child in child_nodes:
+                node_id = child["id"]
+                tree["nodes"][node_id] = child
+                new_node_ids.append(node_id)
+
+            # Update parent's children
+            node["children"].extend(new_node_ids)
+            return new_node_ids
 
         finally:
             self._expanding_nodes.remove(node_id)
 
-    async def get_node_content(self, tree: dict, node_id: str, context: dict) -> dict:
-        """Get detailed content for a node."""
+    async def get_node_content(self, user_id: str, node_id: str) -> dict[str, Any]:
+        """Get detailed content for a specific node."""
+        tree = self._trees.get(user_id)
+        if not tree:
+            msg = "Tree not found"
+            raise ValueError(msg)
+
         node = tree["nodes"].get(node_id)
         if not node:
-            return {}
+            if node_id == "root":
+                return tree["root"]
+            msg = "Node not found"
+            raise ValueError(msg)
 
-        if not node.get("detailed_content"):
-            content_prompt = f"""Generate detailed learning content for: {node['title']}
-            Return JSON:
-            {{
-                "objectives": ["list of learning objectives"],
-                "content": "Detailed explanation",
-                "examples": ["relevant examples"],
-                "practice": ["practice exercises"],
-                "next_steps": ["suggested next topics"]
-            }}"""
+        return node
 
-            detailed_content = await self.ai.generate(content_prompt, {"node": node, "context": context})
+    async def update_node_status(self, user_id: str, node_id: str, status: str) -> dict[str, Any]:
+        """Update the status of a node."""
+        valid_statuses = {"pending", "in_progress", "completed"}
+        if status not in valid_statuses:
+            msg = f"Invalid status. Must be one of: {valid_statuses}"
+            raise ValueError(msg)
 
-            node["detailed_content"] = detailed_content
+        tree = self._trees.get(user_id)
+        if not tree:
+            msg = "Tree not found"
+            raise ValueError(msg)
 
+        node = tree["nodes"].get(node_id)
+        if not node:
+            if node_id == "root":
+                node = tree["root"]
+            else:
+                msg = "Node not found"
+                raise ValueError(msg)
+
+        node["status"] = status
         return node

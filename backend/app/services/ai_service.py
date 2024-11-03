@@ -6,6 +6,7 @@ from dotenv import load_dotenv
 
 import wandb
 
+
 logging.basicConfig(level=logging.INFO)
 load_dotenv()
 

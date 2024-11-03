@@ -1,6 +1,4 @@
 import asyncio
-import os
-import json
 
 import httpx
 from rich.console import Console
@@ -41,14 +39,14 @@ class LearningCLI:
                     answers.append({
                         "question_id": q["id"],
                         "question": q["question"],  # Make sure we include the question
-                        "answer": selected_option["value"]  # Use the value, not the label
+                        "answer": selected_option["value"],  # Use the value, not the label
                     })
                 else:
                     answer = Prompt.ask(f"\n{q['question']}")
                     answers.append({
                         "question_id": q["id"],
                         "question": q["question"],
-                        "answer": answer
+                        "answer": answer,
                     })
             except Exception as e:
                 self.console.print(f"Error processing question: {e}", style="bold red")
@@ -59,7 +57,7 @@ class LearningCLI:
             request_data = {
                 "learning_topic": topic,
                 "end_goal": goal,
-                "answers": answers
+                "answers": answers,
             }
             # Debug print to see what we're sending
             self.console.print("\nSending request:", style="dim")
@@ -67,27 +65,27 @@ class LearningCLI:
 
             response = await self.client.post(
                 "/api/onboarding/generate-roadmap",
-                json=request_data
+                json=request_data,
             )
             response.raise_for_status()
             self.context["roadmap"] = response.json()
             return self.context["roadmap"]
         except Exception as e:
             self.console.print(f"Error generating roadmap: {e}", style="bold red")
-            if hasattr(e, 'response') and e.response:
+            if hasattr(e, "response") and e.response:
                 self.console.print(f"Response content: {e.response.text}", style="bold red")
             return None
 
-    def display_roadmap(self, roadmap):
+    def display_roadmap(self, roadmap) -> None:
         tree = RichTree("🗺 Your Learning Roadmap")
         for step in roadmap.split("\n"):
             tree.add(step)
         self.console.print(tree)
 
 
-async def ensure_server(retries=5, delay=2):
+async def ensure_server(retries=5, delay=2) -> None:
     client = httpx.AsyncClient(base_url="http://localhost:8000")
-    for attempt in range(retries):
+    for _attempt in range(retries):
         try:
             response = await client.get("/api/onboarding/start")
             if response.status_code == 200:
@@ -97,10 +95,11 @@ async def ensure_server(retries=5, delay=2):
             pass
         await asyncio.sleep(delay)
     client.aclose()
-    raise ConnectionError("API server is not running.")
+    msg = "API server is not running."
+    raise ConnectionError(msg)
 
 
-async def main():
+async def main() -> None:
     try:
         await ensure_server()
     except ConnectionError as e:
